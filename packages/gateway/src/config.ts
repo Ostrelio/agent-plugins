@@ -9,13 +9,23 @@ export interface UpstreamConfig {
   cwd?: string;
 }
 
+/** The type a context target must have. Policies compare by type, so a string never matches a numeric rule. */
+export type ContextType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array';
+export const CONTEXT_TYPES: readonly ContextType[] = ['string', 'number', 'integer', 'boolean', 'object', 'array'];
+
+/** A context target that pins the argument's type: `{ "from": "$.amount", "type": "number" }`. */
+export interface TypedSource { from: string; type: ContextType }
+
 export interface ActionMapping {
   /** Exposed tool name, `<upstream>.<tool>`. */
   tool: string;
   actionType: string;
   resourceType?: string;
-  /** Targets (`resourceType`, `resourceId`, `context.<path>`) to `$.path` argument references or literals. */
-  map: Record<string, string>;
+  /**
+   * Targets (`resourceType`, `resourceId`, `context.<path>`) to `$.path` argument references or literals.
+   * A `context.<path>` target can instead be a `TypedSource`, which refuses calls whose value has another type.
+   */
+  map: Record<string, string | TypedSource>;
 }
 
 export interface GatewayConfig {
@@ -139,9 +149,23 @@ export function parseConfig(raw: unknown, source = 'ostrelio.gateway.json'): Gat
       const okTarget = target === 'resourceType' || target === 'resourceId' ||
         (target.startsWith('context.') && target.slice(8).split('.').every((s) => s !== ''));
       if (!okTarget) fail(tpath, `is not a valid target; allowed targets are ${ALLOWED_TARGETS}`);
-      if (typeof value !== 'string') return fail(tpath, 'must be a string (a "$.path" argument reference or a literal)');
-      if (value.startsWith('$') && !(value === '$' || (value.startsWith('$.') && value.slice(2).split('.').every((s) => SEG_RE.test(s))))) {
-        fail(tpath, `"${value}" is not a valid argument path; use "$" or "$.name.name" (letters, digits, "_" or "-")`);
+      let path: string;
+      if (isRecord(value) && target.startsWith('context.')) {
+        for (const key of Object.keys(value)) {
+          if (key !== 'from' && key !== 'type') fail(`${tpath}.${key}`, 'is not a known setting (expected from, type)');
+        }
+        if (!CONTEXT_TYPES.includes(value.type as ContextType)) fail(`${tpath}.type`, `must be one of ${CONTEXT_TYPES.join(', ')}`);
+        if (typeof value.from !== 'string' || !value.from.startsWith('$')) return fail(`${tpath}.from`, 'must be a "$.path" argument reference');
+        path = value.from;
+      } else if (typeof value === 'string') {
+        path = value;
+      } else {
+        return fail(tpath, target.startsWith('context.')
+          ? 'must be a "$.path" argument reference, a literal string, or { "from": "$.path", "type": "number" }'
+          : 'must be a string (a "$.path" argument reference or a literal)');
+      }
+      if (path.startsWith('$') && !(path === '$' || (path.startsWith('$.') && path.slice(2).split('.').every((s) => SEG_RE.test(s))))) {
+        fail(tpath, `"${path}" is not a valid argument path; use "$" or "$.name.name" (letters, digits, "_" or "-")`);
       }
     }
     if (item.resourceType === undefined && !('resourceType' in map)) {
@@ -151,7 +175,7 @@ export function parseConfig(raw: unknown, source = 'ostrelio.gateway.json'): Gat
       tool,
       actionType: item.actionType as string,
       ...(item.resourceType === undefined ? {} : { resourceType: item.resourceType as string }),
-      map: map as Record<string, string>,
+      map: map as Record<string, string | TypedSource>,
     });
   });
 

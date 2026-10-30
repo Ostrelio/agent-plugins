@@ -72,7 +72,7 @@ with your workspace:
       "resourceType": "charge",
       "map": {
         "resourceId": "$.charge",
-        "context.amount": "$.amount_cents",
+        "context.amount": { "from": "$.amount_cents", "type": "integer" },
         "context.currency": "$.currency",
         "context.customerId": "$.customer"
       }
@@ -98,7 +98,7 @@ Unknown keys are rejected, and every error names the JSON path that is wrong.
 | `actions[].tool` | yes | Exposed tool name, `<upstream>.<tool>`. One mapping per tool. |
 | `actions[].actionType` | yes | The Ostrelio action type policies match on, e.g. `refund.create`. |
 | `actions[].resourceType` | yes* | Resource type. *Or set `map.resourceType`. |
-| `actions[].map` | no | Targets `resourceType`, `resourceId`, or `context.<path>` (dots nest) mapped to `$.arg` (a tool argument; `$.a.b` nests, `$` is all of them) or a literal string. `resourceId` defaults to the tool name. Every mapped argument is required: a call that omits one is refused, so a policy always sees the values it checks. `resourceType` and `resourceId` must resolve to a string or a number. |
+| `actions[].map` | no | Targets `resourceType`, `resourceId`, or `context.<path>` (dots nest) mapped to `$.arg` (a tool argument; `$.a.b` nests, `$` is all of them) or a literal string. `resourceId` defaults to the tool name. Every mapped argument is required: a call that omits one is refused, so a policy always sees the values it checks. `resourceType` and `resourceId` must resolve to a string or a number. A `context.<path>` value must be a string, number or boolean unless it declares a type: `{ "from": "$.amount", "type": "number" }`, where `type` is `string`, `number`, `integer`, `boolean`, `object` or `array`. A call whose value has another type is refused. Policies compare by type, so declare the type of every value a numeric rule checks: otherwise `"100000"` (a string) never matches `amount gt 1000`. |
 | `unmappedTools` | no | `"deny"` (default) refuses tools with no mapping. `"allow"` forwards them with no authorization and a warning on stderr. |
 | `approvalWaitSeconds` | no | Integer 0 to 900. How long a call that needs approval blocks waiting for a reviewer. Default 0. |
 

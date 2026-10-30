@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Proposal } from '@ostrelio/sdk';
-import type { ActionMapping } from './config.js';
+import type { ActionMapping, ContextType } from './config.js';
 
 export class MappingError extends Error {
   constructor(message: string) {
@@ -26,6 +26,20 @@ export function readPath(args: unknown, path: string): unknown {
 const resolveValue = (value: string, args: Record<string, unknown>): unknown =>
   value.startsWith('$') ? readPath(args, value) : value;
 
+/** Whether `value` has the declared type, or (no type declared) is a plain scalar. */
+function hasContextType(value: unknown, type: ContextType | undefined): boolean {
+  switch (type) {
+    case 'string': return typeof value === 'string';
+    case 'number': return typeof value === 'number' && Number.isFinite(value);
+    case 'integer': return Number.isInteger(value);
+    case 'boolean': return typeof value === 'boolean';
+    case 'object': return isPlainObject(value);
+    case 'array': return Array.isArray(value);
+    // Policies compare by type, so objects, arrays and null are only passed when a mapping asks for them.
+    default: return typeof value === 'string' || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value));
+  }
+}
+
 /** Builds the Ostrelio proposal for a tool call from its action mapping. */
 export function buildProposal(action: ActionMapping, toolName: string, args: Record<string, unknown>): Proposal {
   const required = (target: 'resourceType' | 'resourceId', value: string): string => {
@@ -42,18 +56,26 @@ export function buildProposal(action: ActionMapping, toolName: string, args: Rec
     throw new MappingError(`Argument ${value} must be a string or a number for ${target}.`);
   };
 
-  const mappedType = action.map.resourceType;
+  // parseConfig only allows plain strings for these two targets.
+  const mappedType = action.map.resourceType as string | undefined;
   const resourceType = mappedType === undefined ? action.resourceType : required('resourceType', mappedType);
   if (resourceType === undefined) throw new MappingError(`Action for "${toolName}" has no resourceType.`);
-  const mappedId = action.map.resourceId;
+  const mappedId = action.map.resourceId as string | undefined;
   const resourceId = mappedId === undefined ? toolName : required('resourceId', mappedId);
 
   const context: Record<string, unknown> = {};
-  for (const [target, value] of Object.entries(action.map)) {
+  for (const [target, source] of Object.entries(action.map)) {
     if (!target.startsWith('context.')) continue;
+    const value = typeof source === 'string' ? source : source.from;
+    const type = typeof source === 'string' ? undefined : source.type;
     const resolved = resolveValue(value, args);
     // Policies must see every argument they were configured to check, so a missing one refuses the call.
     if (resolved === undefined) throw new MappingError(`Argument ${value} is required for ${target}.`);
+    // A value of the wrong type would slip past a policy ("amount gt 1000" never matches the string "100000").
+    if (!hasContextType(resolved, type)) {
+      const expected = type ? `${/^[aeiou]/.test(type) ? 'an' : 'a'} ${type}` : 'a string, number or boolean';
+      throw new MappingError(`Argument ${value} must be ${expected} for ${target}.`);
+    }
     const keys = target.slice(8).split('.');
     let node = context;
     for (const key of keys.slice(0, -1)) {

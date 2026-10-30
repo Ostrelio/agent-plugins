@@ -147,6 +147,18 @@ describe('parseConfig', () => {
 
   it('rejects a non-string map value', () => {
     expect(failure((raw) => { raw.actions[0].map.resourceId = 5; })).toContain('actions[0].map.resourceId must be a string');
+    // Typed sources are for context targets only.
+    expect(failure((raw) => { raw.actions[0].map.resourceId = { from: '$.charge', type: 'string' }; })).toContain('actions[0].map.resourceId must be a string');
+  });
+
+  it('accepts a typed context source and rejects a bad one', () => {
+    const raw = valid() as Raw;
+    raw.actions[0].map['context.amount'] = { from: '$.amount', type: 'number' };
+    expect(parseConfig(raw).actions[0]?.map['context.amount']).toEqual({ from: '$.amount', type: 'number' });
+    expect(failure((r) => { r.actions[0].map['context.amount'] = { from: '$.amount', type: 'money' }; })).toContain('actions[0].map.context.amount.type must be one of string, number, integer');
+    expect(failure((r) => { r.actions[0].map['context.amount'] = { from: 'USD', type: 'string' }; })).toContain('actions[0].map.context.amount.from must be a "$.path"');
+    expect(failure((r) => { r.actions[0].map['context.amount'] = { from: '$.a..b', type: 'number' }; })).toContain('is not a valid argument path');
+    expect(failure((r) => { r.actions[0].map['context.amount'] = { from: '$.amount', type: 'number', min: 0 }; })).toContain('context.amount.min is not a known setting');
   });
 
   it('rejects a bad JSONPath', () => {

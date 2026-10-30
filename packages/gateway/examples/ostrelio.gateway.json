@@ -10,7 +10,7 @@
       "resourceType": "charge",
       "map": {
         "resourceId": "$.charge",
-        "context.amount": "$.amount_cents",
+        "context.amount": { "from": "$.amount_cents", "type": "integer" },
         "context.currency": "$.currency",
         "context.customerId": "$.customer"
       }
@@ -32,7 +32,7 @@
       "map": {
         "resourceId": "$.invoice",
         "context.vendorId": "$.vendor",
-        "context.amount": "$.amount_cents",
+        "context.amount": { "from": "$.amount_cents", "type": "integer" },
         "context.currency": "$.currency"
       }
     }

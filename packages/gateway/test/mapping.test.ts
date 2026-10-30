@@ -45,10 +45,32 @@ describe('buildProposal', () => {
     });
   });
 
-  it('keeps non-string values from arguments as they are', () => {
-    const proposal = buildProposal(action({ map: { 'context.items': '$.items', 'context.flag': '$.flag', 'context.none': '$.none' } }),
-      'fake.create_refund', { items: [1, { a: 2 }], flag: false, none: null });
-    expect(proposal.context).toEqual({ items: [1, { a: 2 }], flag: false, none: null });
+  it('keeps scalar values from arguments as they are', () => {
+    const proposal = buildProposal(action({ map: { 'context.count': '$.count', 'context.flag': '$.flag', 'context.note': '$.note' } }),
+      'fake.create_refund', { count: 3, flag: false, note: 'hi' });
+    expect(proposal.context).toEqual({ count: 3, flag: false, note: 'hi' });
+  });
+
+  it('refuses objects, arrays and null unless the mapping declares that type', () => {
+    for (const bad of [[1, { a: 2 }], { a: 1 }, null]) {
+      expect(() => buildProposal(action({ map: { 'context.items': '$.items' } }), 't', { items: bad }))
+        .toThrow('Argument $.items must be a string, number or boolean for context.items.');
+    }
+    const typed = buildProposal(action({ map: {
+      'context.items': { from: '$.items', type: 'array' }, 'context.meta': { from: '$.meta', type: 'object' },
+    } }), 't', { items: [1, { a: 2 }], meta: { a: 1 } });
+    expect(typed.context).toEqual({ items: [1, { a: 2 }], meta: { a: 1 } });
+  });
+
+  it('a typed amount refuses a numeric string, so it cannot slip past "amount gt 1000"', () => {
+    const mapped = action({ map: { 'context.amount': { from: '$.amount', type: 'number' } } });
+    expect(buildProposal(mapped, 't', { amount: 100000 }).context).toEqual({ amount: 100000 });
+    expect(() => buildProposal(mapped, 't', { amount: '100000' })).toThrow('Argument $.amount must be a number for context.amount.');
+    expect(() => buildProposal(mapped, 't', { amount: Number.NaN })).toThrow(MappingError);
+    const whole = action({ map: { 'context.cents': { from: '$.cents', type: 'integer' } } });
+    expect(() => buildProposal(whole, 't', { cents: 12.5 })).toThrow('Argument $.cents must be an integer for context.cents.');
+    const text = action({ map: { 'context.currency': { from: '$.currency', type: 'string' } } });
+    expect(() => buildProposal(text, 't', { currency: 840 })).toThrow('Argument $.currency must be a string for context.currency.');
   });
 
   it('builds nested context objects', () => {
