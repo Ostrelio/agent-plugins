@@ -1,0 +1,6 @@
+node_modules/
+dist/
+._*
+.DS_Store
+# AIAuthDev's Backend, linked in only to run the SDK and gateway integration suites.
+/Backend

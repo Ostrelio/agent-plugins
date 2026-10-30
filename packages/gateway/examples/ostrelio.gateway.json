@@ -1,0 +1,42 @@
+{
+  "agent": { "externalKey": "payments-agent", "name": "Payments agent" },
+  "upstreams": [
+    { "name": "payments", "command": "node", "args": ["sample-tools.mjs"] }
+  ],
+  "actions": [
+    {
+      "tool": "payments.create_refund",
+      "actionType": "refund.create",
+      "resourceType": "charge",
+      "map": {
+        "resourceId": "$.charge",
+        "context.amount": "$.amount_cents",
+        "context.currency": "$.currency",
+        "context.customerId": "$.customer"
+      }
+    },
+    {
+      "tool": "payments.update_payout_destination",
+      "actionType": "vendor.payout_destination.update",
+      "resourceType": "payout_destination",
+      "map": {
+        "resourceId": "$.vendor",
+        "context.vendorId": "$.vendor",
+        "context.destination": "$.destination"
+      }
+    },
+    {
+      "tool": "payments.send_payment",
+      "actionType": "payment.send",
+      "resourceType": "payment",
+      "map": {
+        "resourceId": "$.invoice",
+        "context.vendorId": "$.vendor",
+        "context.amount": "$.amount_cents",
+        "context.currency": "$.currency"
+      }
+    }
+  ],
+  "unmappedTools": "deny",
+  "approvalWaitSeconds": 0
+}

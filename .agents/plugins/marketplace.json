@@ -1,0 +1,20 @@
+{
+  "name": "ostrelio",
+  "interface": {
+    "displayName": "Ostrelio"
+  },
+  "plugins": [
+    {
+      "name": "ostrelio",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ostrelio-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

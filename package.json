@@ -1,0 +1,15 @@
+{
+  "name": "ostrelio-agent-plugins",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ostrelio's agent integrations: harness hook plugins (omp, Claude Code, Codex, Cursor, Gemini CLI, Windsurf), the connect CLI, the MCP gateway and the TypeScript SDK.",
+  "type": "module",
+  "scripts": {
+    "build:codex": "node scripts/build-codex-plugin.mjs",
+    "check:codex": "node scripts/build-codex-plugin.mjs --check",
+    "test": "npm run test:plugins && npm run test:codex",
+    "test:plugins": "for p in agent-guard omp-plugin claude-code-plugin codex-plugin cursor-plugin gemini-cli-plugin windsurf-plugin connect; do npm test --prefix packages/$p || exit 1; done",
+    "test:codex": "node --test --experimental-strip-types tests/*.test.ts"
+  },
+  "engines": { "node": ">=22.13" }
+}

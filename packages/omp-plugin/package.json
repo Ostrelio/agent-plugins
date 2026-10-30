@@ -1,0 +1,13 @@
+{
+  "name": "@ostrelio/omp-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ostrelio for oh-my-pi (omp) and pi: every tool call is authorized by Ostrelio before it runs.",
+  "type": "module",
+  "main": "ostrelio.ts",
+  "scripts": {
+    "test": "node --test --experimental-strip-types ostrelio.test.ts terminal.test.ts",
+    "policies": "node install-policies.mjs"
+  },
+  "engines": { "node": ">=22.13" }
+}

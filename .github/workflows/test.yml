@@ -1,0 +1,41 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  plugins:
+    name: plugins
+    runs-on: [self-hosted, linux, x64, epyc]
+    timeout-minutes: 15
+    steps:
+      # Container jobs on the shared runner can leave root-owned files in the work folder.
+      - name: Reclaim the workspace from earlier container jobs
+        run: docker run --rm -v "$GITHUB_WORKSPACE:/w" busybox:1.36 chown -R "$(id -u):$(id -g)" /w
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+      # Harness plugins have no dependencies; their tests run on Node's type stripping.
+      - run: npm test
+      - run: npm run check:codex
+
+  sdk-gateway:
+    name: sdk-gateway
+    runs-on: [self-hosted, linux, x64, epyc]
+    timeout-minutes: 15
+    steps:
+      - name: Reclaim the workspace from earlier container jobs
+        run: docker run --rm -v "$GITHUB_WORKSPACE:/w" busybox:1.36 chown -R "$(id -u):$(id -g)" /w
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+      # Unit suites, and the build (which typechecks src/). The integration suites import AIAuthDev's
+      # Backend, so they and the full `npm run check` (it includes them) run in AIAuthDev's CI.
+      - run: npm ci && npm test && npm run build
+        working-directory: packages/sdk
+      - run: npm ci && npm test && npm run build
+        working-directory: packages/gateway

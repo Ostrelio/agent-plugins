@@ -1,0 +1,44 @@
+{
+  "name": "@ostrelio/gateway",
+  "version": "0.1.0",
+  "description": "MCP gateway that asks Ostrelio before any consequential tool call reaches your upstream MCP servers.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "ostrelio-gateway": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "build": "npm run build --prefix ../sdk && rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli.js",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "example": "npm run build && node examples/demo-client.mjs",
+    "prepublishOnly": "npm run check && npm test && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@ostrelio/sdk": "file:../sdk"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

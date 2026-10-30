@@ -1,0 +1,4 @@
+# omp settings for running under Ostrelio (omp --config omp-config.yml).
+# A held tool call waits for a person, so give the tool_call hook up to 15 minutes.
+extensionHandlers:
+  toolCallTimeoutMs: 900000

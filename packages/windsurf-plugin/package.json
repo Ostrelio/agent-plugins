@@ -1,0 +1,12 @@
+{
+  "name": "@ostrelio/windsurf-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windsurf (Cascade) hooks: every command, MCP call, file read and edit is authorized by Ostrelio before it runs.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --experimental-strip-types hook.test.ts",
+    "install-hooks": "node install.mjs"
+  },
+  "engines": { "node": ">=22.13" }
+}

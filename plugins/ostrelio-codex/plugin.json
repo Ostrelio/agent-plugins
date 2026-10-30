@@ -1,0 +1,32 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ostrelio",
+  "version": "0.1.0",
+  "description": "Every shell command, patch and MCP call Codex makes is authorized by Ostrelio before it runs.",
+  "author": {
+    "name": "Ostrelio",
+    "url": "https://github.com/Ostrelio/agent-plugins"
+  },
+  "repository": "https://github.com/Ostrelio/agent-plugins",
+  "license": "UNLICENSED",
+  "keywords": [
+    "security",
+    "authorization",
+    "guardrails",
+    "agents"
+  ],
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json",
+      "interface": {
+        "displayName": "Ostrelio",
+        "shortDescription": "Authorize every tool call",
+        "longDescription": "Every shell command, patch and MCP call Codex makes is authorized by Ostrelio before it runs. Safe calls run, risky ones wait for a person in the Ostrelio dashboard, and destructive or tampering calls are blocked with the reason.",
+        "developerName": "Ostrelio",
+        "category": "Developer Tools",
+        "capabilities": [],
+        "websiteURL": "https://github.com/Ostrelio/agent-plugins"
+      }
+    }
+  }
+}

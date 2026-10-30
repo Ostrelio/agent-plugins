@@ -1,0 +1,41 @@
+{
+  "description": "Ostrelio authorizes every Codex tool call before it runs.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --experimental-strip-types \"${PLUGIN_ROOT}/runtime/codex-plugin/src/hook.ts\"",
+            "timeout": 30,
+            "statusMessage": "Ostrelio: recording request"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --experimental-strip-types \"${PLUGIN_ROOT}/runtime/codex-plugin/src/hook.ts\"",
+            "timeout": 3600,
+            "statusMessage": "Ostrelio: authorizing tool call"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --experimental-strip-types \"${PLUGIN_ROOT}/runtime/codex-plugin/src/hook.ts\"",
+            "timeout": 30,
+            "statusMessage": "Ostrelio: recording result"
+          }
+        ]
+      }
+    ]
+  }
+}

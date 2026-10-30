@@ -1,0 +1,510 @@
+[
+  {
+    "displayKey": "POL-AGT-01",
+    "category": "Agent tools",
+    "name": "Reading inside the workspace",
+    "rule": {
+      "actionTypes": [
+        "agent.read"
+      ],
+      "when": [
+        {
+          "field": "context.pathScope",
+          "op": "eq",
+          "value": "workspace"
+        }
+      ],
+      "decision": "ALLOW",
+      "reason": "Reading inside the agent's workspace is allowed; reading anywhere else needs approval.",
+      "review": false
+    }
+  },
+  {
+    "displayKey": "POL-AGT-02",
+    "category": "Agent tools",
+    "name": "Edits inside the workspace",
+    "rule": {
+      "actionTypes": [
+        "file.write"
+      ],
+      "when": [
+        {
+          "field": "context.pathScope",
+          "op": "eq",
+          "value": "workspace"
+        }
+      ],
+      "decision": "ALLOW",
+      "reason": "Edits inside the agent's own workspace are allowed; anything outside it needs approval."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-03",
+    "category": "Agent tools",
+    "name": "Deleting or moving files",
+    "rule": {
+      "actionTypes": [
+        "file.delete",
+        "file.move"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "Deleting or moving files needs a person to approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-04",
+    "category": "Agent tools",
+    "name": "Simple read-only and harmless shell commands",
+    "rule": {
+      "actionTypes": [
+        "shell.exec"
+      ],
+      "when": [
+        {
+          "field": "context.compound",
+          "op": "eq",
+          "value": "no"
+        },
+        {
+          "field": "context.program",
+          "op": "in",
+          "value": [
+            "ls",
+            "pwd",
+            "cat",
+            "head",
+            "tail",
+            "wc",
+            "echo",
+            "grep",
+            "rg",
+            "find",
+            "which",
+            "date",
+            "whoami",
+            "tree",
+            "du",
+            "df",
+            "stat",
+            "file",
+            "mkdir",
+            "touch"
+          ]
+        }
+      ],
+      "decision": "ALLOW",
+      "reason": "A single read-only or harmless command (ls, cat, grep, mkdir, touch, …) runs without review. Every other command needs approval.",
+      "review": false
+    }
+  },
+  {
+    "displayKey": "POL-AGT-05",
+    "category": "Agent tools",
+    "name": "Destructive shell commands",
+    "rule": {
+      "actionTypes": [
+        "shell.exec",
+        "network.request",
+        "network.upload",
+        "secret.read",
+        "infra.read",
+        "infra.change",
+        "infra.destroy",
+        "code.git.force_push",
+        "code.git.branch_delete",
+        "code.git.reset_hard"
+      ],
+      "when": [
+        {
+          "field": "context.programs",
+          "op": "contains",
+          "value": " rm "
+        }
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "This command deletes files, so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-06",
+    "category": "Agent tools",
+    "name": "No privilege escalation",
+    "rule": {
+      "actionTypes": [
+        "shell.exec",
+        "network.request",
+        "network.upload",
+        "secret.read",
+        "infra.read",
+        "infra.change",
+        "infra.destroy",
+        "code.git.force_push",
+        "code.git.branch_delete",
+        "code.git.reset_hard"
+      ],
+      "when": [
+        {
+          "field": "context.programs",
+          "op": "contains",
+          "value": " sudo "
+        }
+      ],
+      "decision": "DENY",
+      "reason": "Agents may not run commands as root."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-07",
+    "category": "Agent tools",
+    "name": "Pushing code",
+    "rule": {
+      "actionTypes": [
+        "shell.exec"
+      ],
+      "when": [
+        {
+          "field": "context.command",
+          "op": "contains",
+          "value": "git push"
+        }
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "Pushing code needs a person to approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-08",
+    "category": "Agent tools",
+    "name": "No ad-hoc code execution",
+    "rule": {
+      "actionTypes": [
+        "code.exec"
+      ],
+      "decision": "DENY",
+      "reason": "Running generated code would hide what it does from review. Call the tools directly instead."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-09",
+    "category": "Agent tools",
+    "name": "Read-only git",
+    "rule": {
+      "actionTypes": [
+        "shell.exec"
+      ],
+      "when": [
+        {
+          "field": "context.compound",
+          "op": "eq",
+          "value": "no"
+        },
+        {
+          "field": "context.program",
+          "op": "eq",
+          "value": "git"
+        },
+        {
+          "field": "context.subcommand",
+          "op": "in",
+          "value": [
+            "status",
+            "log",
+            "diff",
+            "show",
+            "branch",
+            "rev-parse",
+            "remote"
+          ]
+        }
+      ],
+      "decision": "ALLOW",
+      "reason": "Reading the repository (status, log, diff, show, branch) changes nothing. Commits, pushes and resets need approval."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-10",
+    "category": "Agent tools",
+    "name": "No changes to Ostrelio's own enforcement",
+    "rule": {
+      "actionTypes": [
+        "agent.tamper"
+      ],
+      "decision": "DENY",
+      "reason": "The agent may not edit, move or delete Ostrelio's plugin, its keys, omp or Claude Code settings and hooks, MCP or gateway config, or OSTRELIO_* settings. An administrator makes these changes."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-11",
+    "category": "Agent tools",
+    "name": "Clearing history, logs or security agents",
+    "rule": {
+      "actionTypes": [
+        "audit.tamper"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "Clearing shell history or logs, or stopping a security agent, hides what happened, so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-12",
+    "category": "Agent tools",
+    "name": "Reading credentials",
+    "rule": {
+      "actionTypes": [
+        "secret.read"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "This reads credentials (.env, ~/.ssh, ~/.aws, keys, a keychain or secret env vars), so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-13",
+    "category": "Agent tools",
+    "name": "Sending credentials out",
+    "rule": {
+      "actionTypes": [
+        "secret.exfiltrate"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "This command reads credentials and sends data over the network in one go, so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-14",
+    "category": "Agent tools",
+    "name": "Uploads and outbound connections",
+    "rule": {
+      "actionTypes": [
+        "network.upload"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "This sends data to another host (POST, upload, scp, rsync, nc or ssh), so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-15",
+    "category": "Agent tools",
+    "name": "Fetching from a named host",
+    "rule": {
+      "actionTypes": [
+        "network.request"
+      ],
+      "decision": "ALLOW",
+      "reason": "A single plain fetch (one URL, read-only options, nothing saved) from a named host can run once the reviewers agree. Uploads, saved downloads, extra options, chained commands and hidden destinations need approval.",
+      "when": [
+        {
+          "field": "context.compound",
+          "op": "eq",
+          "value": "no"
+        },
+        {
+          "field": "context.host",
+          "op": "neq",
+          "value": ""
+        },
+        {
+          "field": "context.plainFetch",
+          "op": "eq",
+          "value": "yes"
+        }
+      ]
+    }
+  },
+  {
+    "displayKey": "POL-AGT-16",
+    "category": "Agent tools",
+    "name": "Paste or file-drop hosts",
+    "rule": {
+      "actionTypes": [
+        "network.upload",
+        "network.request"
+      ],
+      "when": [
+        {
+          "field": "context.domain",
+          "op": "in",
+          "value": [
+            "pastebin.com",
+            "paste.ee",
+            "hastebin.com",
+            "dpaste.org",
+            "ghostbin.co",
+            "termbin.com",
+            "transfer.sh",
+            "file.io",
+            "0x0.st",
+            "catbox.moe",
+            "temp.sh",
+            "bashupload.com",
+            "webhook.site",
+            "requestbin.com",
+            "pipedream.net",
+            "ngrok.io",
+            "ngrok-free.app",
+            "interact.sh",
+            "oast.fun",
+            "burpcollaborator.net"
+          ]
+        }
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "This host is a paste, file-drop or request-capture service, a common way to exfiltrate data, so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-17",
+    "category": "Agent tools",
+    "name": "Read-only cloud CLI commands",
+    "rule": {
+      "actionTypes": [
+        "infra.read"
+      ],
+      "when": [
+        {
+          "field": "context.compound",
+          "op": "eq",
+          "value": "no"
+        }
+      ],
+      "decision": "ALLOW",
+      "reason": "Reading cloud state (get, describe, list) changes nothing, so it can run once the reviewers agree. Secret reads, plans and commands pointed at another config or endpoint need approval."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-18",
+    "category": "Agent tools",
+    "name": "Cloud and infrastructure changes",
+    "rule": {
+      "actionTypes": [
+        "infra.change",
+        "infra.destroy"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "This changes or deletes cloud infrastructure (apply, scale, delete, terminate, set-iam-policy), so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-19",
+    "category": "Agent tools",
+    "name": "Force-push or branch deletion on protected branches",
+    "rule": {
+      "actionTypes": [
+        "code.git.force_push",
+        "code.git.branch_delete"
+      ],
+      "when": [
+        {
+          "field": "context.branch",
+          "op": "in",
+          "value": [
+            "",
+            "main",
+            "master",
+            "trunk",
+            "develop",
+            "production",
+            "prod",
+            "release"
+          ]
+        }
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "Force-pushing to or deleting a protected branch rewrites shared history, so a person must approve it. An unnamed branch counts as protected."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-20",
+    "category": "Agent tools",
+    "name": "Destructive git",
+    "rule": {
+      "actionTypes": [
+        "code.git.force_push",
+        "code.git.branch_delete",
+        "code.git.reset_hard"
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "Force-pushing, deleting a branch or reset --hard throws work away, so a person must approve it."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-21",
+    "category": "Agent tools",
+    "name": "CI workflow edits",
+    "rule": {
+      "actionTypes": [
+        "file.write",
+        "file.delete",
+        "file.move"
+      ],
+      "when": [
+        {
+          "field": "context.path",
+          "op": "contains",
+          "value": ".github/workflows/"
+        }
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "CI workflows run with repository secrets, so a person must approve changes to them."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-22",
+    "category": "Agent tools",
+    "name": "No recursive delete outside the workspace",
+    "rule": {
+      "actionTypes": [
+        "shell.exec",
+        "network.request",
+        "network.upload",
+        "secret.read",
+        "infra.read",
+        "infra.change",
+        "infra.destroy",
+        "code.git.force_push",
+        "code.git.branch_delete",
+        "code.git.reset_hard"
+      ],
+      "when": [
+        {
+          "field": "context.programs",
+          "op": "contains",
+          "value": " rm "
+        },
+        {
+          "field": "context.recursiveDelete",
+          "op": "eq",
+          "value": "yes"
+        },
+        {
+          "field": "context.deleteScope",
+          "op": "eq",
+          "value": "outside"
+        }
+      ],
+      "decision": "DENY",
+      "reason": "Recursively deleting files outside the workspace is not allowed."
+    }
+  },
+  {
+    "displayKey": "POL-AGT-23",
+    "category": "Agent tools",
+    "name": "Edits outside the workspace",
+    "rule": {
+      "actionTypes": [
+        "file.write"
+      ],
+      "when": [
+        {
+          "field": "context.pathScope",
+          "op": "in",
+          "value": [
+            "outside",
+            "unknown"
+          ]
+        }
+      ],
+      "decision": "REQUIRE_APPROVAL",
+      "reason": "Edits outside the workspace need a person to approve them."
+    }
+  }
+]

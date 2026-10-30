@@ -1,0 +1,9 @@
+{
+  "name": "ostrelio",
+  "displayName": "Ostrelio",
+  "version": "0.1.0",
+  "description": "Authorize every Claude Code tool call with Ostrelio before it runs.",
+  "author": {
+    "name": "Ostrelio"
+  }
+}

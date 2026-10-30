@@ -1,0 +1,12 @@
+{
+  "name": "@ostrelio/connect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Connect an agent to Ostrelio in one command: Claude Code, omp or an MCP client.",
+  "type": "module",
+  "bin": { "ostrelio-connect": "bin/ostrelio-connect.mjs" },
+  "scripts": {
+    "test": "node --test --experimental-strip-types src/connect.test.ts"
+  },
+  "engines": { "node": ">=22.13" }
+}

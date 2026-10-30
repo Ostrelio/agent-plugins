@@ -1,0 +1,19 @@
+[
+  { "displayKey": "POL-PAY-01", "category": "Payments (MCP)", "name": "Balance reads",
+    "rule": { "actionTypes": ["mcp.payments_get_balance"], "decision": "ALLOW", "reason": "Reading the balance changes nothing." } },
+  { "displayKey": "POL-PAY-02", "category": "Payments (MCP)", "name": "Small refunds",
+    "rule": { "actionTypes": ["mcp.payments_create_refund"], "when": [{ "field": "context.args.amount_cents", "op": "lte", "value": 25000 }],
+      "decision": "ALLOW", "reason": "Refunds up to $250 run without review." } },
+  { "displayKey": "POL-PAY-03", "category": "Payments (MCP)", "name": "Large refunds",
+    "rule": { "actionTypes": ["mcp.payments_create_refund"], "when": [{ "field": "context.args.amount_cents", "op": "gt", "value": 25000 }],
+      "decision": "REQUIRE_APPROVAL", "reason": "Refunds over $250 need a person to approve them." } },
+  { "displayKey": "POL-PAY-04", "category": "Payments (MCP)", "name": "Refund ceiling",
+    "rule": { "actionTypes": ["mcp.payments_create_refund"], "when": [{ "field": "context.args.amount_cents", "op": "gt", "value": 250000 }],
+      "decision": "DENY", "reason": "Refunds over $2,500 are not allowed." } },
+  { "displayKey": "POL-PAY-05", "category": "Payments (MCP)", "name": "Outgoing money and bank changes",
+    "rule": { "actionTypes": ["mcp.payments_send_payment", "mcp.payments_send_wire", "mcp.payments_update_payout_destination"],
+      "decision": "REQUIRE_APPROVAL", "reason": "Sending money or changing where it goes needs a person to approve it." } },
+  { "displayKey": "POL-PAY-06", "category": "Payments (MCP)", "name": "Wire ceiling",
+    "rule": { "actionTypes": ["mcp.payments_send_wire"], "when": [{ "field": "context.args.amount_cents", "op": "gt", "value": 1000000 }],
+      "decision": "DENY", "reason": "Agents may not wire more than $10,000." } }
+]
