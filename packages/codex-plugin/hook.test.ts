@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildHooks, merge } from './install.mjs';
+import { buildHooks, codexHome, merge } from './install.mjs';
 import { codexStore, handleHook, toolCall, type HookInput } from './src/hook.ts';
 import { memoryStore } from '../claude-code-plugin/src/session-store.ts';
 
@@ -177,4 +177,9 @@ test('installed as a plugin, sessions live in PLUGIN_DATA', async () => {
     await codexStore({ PLUGIN_DATA: dir }).update('s1', (current) => ({ record: { ...current, request: 'hi' }, result: undefined }));
     assert.ok(readdirSync(join(dir, 'sessions')).length > 0);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the installer writes into CODEX_HOME when it is set, as Codex reads it', () => {
+  assert.equal(codexHome({ CODEX_HOME: '/tmp/demo-codex' }), '/tmp/demo-codex');
+  assert.match(codexHome({}), /\/\.codex$/);
 });

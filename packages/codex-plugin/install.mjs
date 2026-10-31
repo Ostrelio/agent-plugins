@@ -2,7 +2,7 @@
 /**
  * Writes Ostrelio's hooks into a Codex hooks.json, keeping any other hooks already there.
  *
- *   node packages/codex-plugin/install.mjs                 ~/.codex/hooks.json (every project)
+ *   node packages/codex-plugin/install.mjs                 $CODEX_HOME/hooks.json, default ~/.codex (every project)
  *   node packages/codex-plugin/install.mjs --project DIR   DIR/.codex/hooks.json (needs a trusted project)
  *   node packages/codex-plugin/install.mjs --uninstall     remove Ostrelio's hooks again
  *
@@ -28,6 +28,9 @@ export function buildHooks(pluginDir = PLUGIN_DIR) {
   };
 }
 
+/** Codex's user config folder: CODEX_HOME when set (as Codex itself reads it), else ~/.codex. */
+export const codexHome = (env = process.env) => (env.CODEX_HOME ? resolve(env.CODEX_HOME) : join(homedir(), '.codex'));
+
 const isOurs = (group) => Array.isArray(group?.hooks) && group.hooks.some((entry) => typeof entry?.command === 'string' && entry.command.includes(MARKER));
 
 /** `existing` with Ostrelio's hooks replaced (or removed), everything else kept. */
@@ -43,7 +46,7 @@ export function merge(existing, ours, uninstall = false) {
 
 function main(argv) {
   const projectAt = argv.indexOf('--project');
-  const target = projectAt >= 0 ? join(resolve(argv[projectAt + 1] ?? '.'), '.codex', 'hooks.json') : join(homedir(), '.codex', 'hooks.json');
+  const target = projectAt >= 0 ? join(resolve(argv[projectAt + 1] ?? '.'), '.codex', 'hooks.json') : join(codexHome(), 'hooks.json');
   let existing = {};
   if (existsSync(target)) {
     try { existing = JSON.parse(readFileSync(target, 'utf8')); } catch (error) {

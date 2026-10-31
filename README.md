@@ -36,6 +36,14 @@ All of them need Node.js 22.13 or newer.
 
 Install the shared policy pack once per workspace with `node packages/agent-guard/install-policies.mjs`.
 
+**Codex CLI:** the CLI doesn't run hooks bundled in a plugin. In Codex 0.164, `codex features list` shows `plugin_hooks` as `removed`. So in the CLI, the plugin adds only the skill, and the hooks come from the installer, which writes them into `$CODEX_HOME/hooks.json` (default `~/.codex`):
+
+```bash
+node packages/codex-plugin/install.mjs
+```
+
+Then trust them in `/hooks`. The desktop app loads the plugin's hooks itself.
+
 The plugin also ships an `ostrelio` skill. It tells Codex what a block or a hold means: don't retry a blocked call, and pass on the approval link for a held one. Sessions are kept in the plugin's data folder.
 
 Codex documents plugin hooks as a guardrail, not a complete enforcement boundary. Read [where enforcement stops](packages/codex-plugin/README.md#where-enforcement-stops-read-this). Hooks also don't run in the IDE extension or in cloud tasks. They are not allowed in the public plugin directory either, so the plugin is installed from this marketplace.
