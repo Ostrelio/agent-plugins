@@ -4,3 +4,6 @@ dist/
 .DS_Store
 # AIAuthDev's Backend, linked in only to run the SDK and gateway integration suites.
 /Backend
+
+# The Codex demo's own Codex home: your demo login, config and sessions.
+/examples/codex-demo/.codex-home/

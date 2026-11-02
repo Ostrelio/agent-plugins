@@ -44,6 +44,8 @@ node packages/codex-plugin/install.mjs
 
 Then trust them in `/hooks`. The desktop app loads the plugin's hooks itself.
 
+To see it working, run the [Codex demo](examples/codex-demo/README.md). It uses two scripts: one runs a local Ostrelio stack, and one runs Codex with the plugin in a demo project. Codex runs in its own `CODEX_HOME`, so your everyday Codex setup isn't touched.
+
 The plugin also ships an `ostrelio` skill. It tells Codex what a block or a hold means: don't retry a blocked call, and pass on the approval link for a held one. Sessions are kept in the plugin's data folder.
 
 Codex documents plugin hooks as a guardrail, not a complete enforcement boundary. Read [where enforcement stops](packages/codex-plugin/README.md#where-enforcement-stops-read-this). Hooks also don't run in the IDE extension or in cloud tasks. They are not allowed in the public plugin directory either, so the plugin is installed from this marketplace.
